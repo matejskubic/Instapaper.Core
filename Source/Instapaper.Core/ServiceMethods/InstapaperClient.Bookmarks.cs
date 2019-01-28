@@ -1,12 +1,10 @@
-﻿using AsyncOAuth;
-using Insta.Portable.Models;
+﻿using Instapaper.Core.Models;
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Insta.Portable
+namespace Instapaper.Core
 {
     public partial class InstapaperClient
     {
@@ -165,14 +163,6 @@ namespace Insta.Portable
             var response = await GetResponse(url, parameters, cancellationToken).ConfigureAwait(false);
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             return ProcessResponse<Bookmark>(json);
-        }
-
-        private Task<HttpResponseMessage> GetResponse(string url, IEnumerable<KeyValuePair<string, string>> parameters, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var client = new HttpClient(new OAuthMessageHandler(_consumerKey, _consumerSecret, AccessToken));
-            var message = new HttpRequestMessage(HttpMethod.Post, url);
-            message.Content = new FormUrlEncodedContent(parameters ?? new Dictionary<string, string>());
-            return client.SendAsync(message, cancellationToken);
         }
     }
 }

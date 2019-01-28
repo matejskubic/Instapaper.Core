@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Insta.Portable.Models
+namespace Instapaper.Core.Models
 {
     public class Error
     {

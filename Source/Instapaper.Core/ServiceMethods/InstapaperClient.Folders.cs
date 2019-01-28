@@ -1,10 +1,10 @@
-﻿using Insta.Portable.Models;
+﻿using Instapaper.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Insta.Portable
+namespace Instapaper.Core
 {
     public partial class InstapaperClient
     {

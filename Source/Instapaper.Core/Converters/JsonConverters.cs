@@ -1,8 +1,7 @@
 ﻿using System;
-using Insta.Portable.Extensions;
 using Newtonsoft.Json;
 
-namespace Insta.Portable.Converters
+namespace Instapaper.Core.Converters
 {
     public class BoolConverter : JsonConverter
     {
@@ -24,10 +23,12 @@ namespace Insta.Portable.Converters
 
     public class EpochDateTimeConverter : JsonConverter
     {
+        public static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var date = (DateTime?) value;
-            var epoch = date.HasValue ? date.Value.ToEpoch() : 0;
+            var date = (DateTime?)value;
+            var epoch = date.HasValue ? (date.Value - Epoch).TotalSeconds : 0;
             writer.WriteValue(epoch);
         }
 
@@ -35,13 +36,13 @@ namespace Insta.Portable.Converters
         {
             var timestamp = float.Parse(reader.Value.ToString());
             if (timestamp == 0) return null;
-            DateTime? date = timestamp.FromEpoch();
+            DateTime? date = Epoch.AddSeconds(timestamp);
             return date;
         }
 
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof (DateTime?);
+            return objectType == typeof(DateTime?);
         }
     }
 }

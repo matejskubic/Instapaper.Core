@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
-using Insta.Portable.Converters;
+using Instapaper.Core.Converters;
 using Newtonsoft.Json;
-using PropertyChanged;
 
-namespace Insta.Portable.Models
+namespace Instapaper.Core.Models
 {
-    [ImplementPropertyChanged]
     [DebuggerDisplay("Id: {Id}, Title: {Title}")]
     public class Bookmark
     {

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Matej Skubic</Authors>
+    <Description>.NET Core / Standard 2.0 API Class Library for Instapaper</Description>
+    <PackageProjectUrl>https://github.com/matejskubic/Instapaper.Core/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/matejskubic/Instapaper.Core.git</RepositoryUrl>
+    <Copyright />
+    <PackageLicenseUrl>https://github.com/matejskubic/Instapaper.Core/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>instapaper instapaper-api</PackageTags>
+    <Version>0.9.1</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="OAuth.DotNetCore" Version="2.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,37 +1,27 @@
-﻿using AsyncOAuth;
-using Insta.Portable.Models;
+﻿using Instapaper.Core.Models;
 using Newtonsoft.Json;
-using PCLCrypto;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Insta.Portable
+namespace Instapaper.Core
 {
-    public partial class InstapaperClient : IInstapaperClient
+    public partial class InstapaperClient : IInstapaperClient, IDisposable
     {
         private readonly string _consumerKey;
         private readonly string _consumerSecret;
         private const string BaseUrl = "https://www.instapaper.com/api";
         private const string AuthUrl = BaseUrl + "/1.1/oauth";
+        public readonly HttpClient HttpClient;
+        public readonly HttpClientHandler HttpClientHandler;
 
         private InstapaperClient()
         {
-            OAuthUtility.ComputeHash = (key, buffer) =>
-            {
-                var crypt = WinRTCrypto.MacAlgorithmProvider.OpenAlgorithm(MacAlgorithm.HmacSha1);
-                var keyBuffer = WinRTCrypto.CryptographicBuffer.CreateFromByteArray(key);
-                var cryptKey = crypt.CreateKey(keyBuffer);
-
-                var dataBuffer = WinRTCrypto.CryptographicBuffer.CreateFromByteArray(buffer);
-                var signBuffer = WinRTCrypto.CryptographicEngine.Sign(cryptKey, dataBuffer);
-
-                byte[] value;
-                WinRTCrypto.CryptographicBuffer.CopyToByteArray(signBuffer, out value);
-                return value;
-            };
+            HttpClientHandler = new HttpClientHandler();
+            HttpClient = new HttpClient(HttpClientHandler);
         }
 
         public InstapaperClient(string consumerKey, string consumerSecret, string oauthToken = null, string oauthSecret = null)
@@ -42,11 +32,11 @@ namespace Insta.Portable
 
             if (!string.IsNullOrEmpty(oauthToken) && !string.IsNullOrEmpty(oauthSecret))
             {
-                AccessToken = new AccessToken(oauthToken, oauthSecret);
+                AccessToken = new OAuthToken(oauthToken, oauthSecret);
             }
         }
 
-        public AccessToken AccessToken { get; set; }
+        public OAuthToken AccessToken { get; set; }
 
         /// <summary>
         /// Get an AccessToken for the user with the given email and password.
@@ -55,7 +45,7 @@ namespace Insta.Portable
         /// <param name="password">The password for the user.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The AccessToken if the user is authenticated. Null if the user is not authenticated.</returns>
-        public async Task<AccessToken> GetAuthTokenAsync(string emailAddress, string password, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<OAuthToken> GetAuthTokenAsync(string emailAddress, string password, CancellationToken cancellationToken = default(CancellationToken))
         {
             //
             // Acquire an access token
@@ -70,23 +60,48 @@ namespace Insta.Portable
                 {"x_auth_mode","client_auth"}
             };
 
-            var handler = new OAuthMessageHandler(_consumerKey, _consumerSecret);
-            var client = new HttpClient(handler);
+            var oauthRequest = OAuth.OAuthRequest.ForClientAuthentication(_consumerKey, _consumerSecret, emailAddress, password);
+            oauthRequest.RequestUrl = authUrl;
+            oauthRequest.Method = "POST";
 
-            var response = await client.PostAsync(authUrl, new FormUrlEncodedContent(parameters), cancellationToken).ConfigureAwait(false);
+            var auth = oauthRequest.GetAuthorizationHeader();
+
+            var message = new HttpRequestMessage(HttpMethod.Post, oauthRequest.RequestUrl);
+            var content = new FormUrlEncodedContent(parameters);
+            message.Content = content;
+
+            message.Headers.Add("Authorization", oauthRequest.GetAuthorizationHeader());
+            var response = await HttpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
             if (response.IsSuccessStatusCode == false) return null;
 
             var tokenBase = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var splitted = tokenBase.Split('&').Select(s => s.Split('=')).ToLookup(xs => xs[0], xs => xs[1]);
-            AccessToken = new AccessToken(splitted["oauth_token"].First(), splitted["oauth_token_secret"].First());
+            AccessToken = new OAuthToken(splitted["oauth_token"].First(), splitted["oauth_token_secret"].First());
             return AccessToken;
+        }
+
+        private Task<HttpResponseMessage> GetResponse(string url, IDictionary<string, string> parameters , CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (parameters == null)
+            {
+                parameters = new Dictionary<string, string>();
+            }
+
+            var oauthRequest = OAuth.OAuthRequest.ForAccessToken(_consumerKey, _consumerSecret, AccessToken.Key, AccessToken.Secret);
+            oauthRequest.Method = "POST";
+            oauthRequest.RequestUrl = url;
+
+            var message = new HttpRequestMessage(HttpMethod.Post, url);
+            message.Headers.Add("Authorization", oauthRequest.GetAuthorizationHeader(parameters));
+            message.Content = new FormUrlEncodedContent(parameters);
+            return HttpClient.SendAsync(message, cancellationToken);
         }
 
         public async Task<InstaResponse<User>> VerifyUserAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             const string url = BaseUrl + "/1.1/account/verify_credentials";
 
-            var response = await GetResponse(url, new List<KeyValuePair<string, string>>(), cancellationToken).ConfigureAwait(false);
+            var response = await GetResponse(url, new Dictionary<string, string>(), cancellationToken).ConfigureAwait(false);
 
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var result = ProcessResponse<List<User>>(json);
@@ -111,5 +126,30 @@ namespace Insta.Portable
             var response = JsonConvert.DeserializeObject<TReturnType>(json);
             return new InstaResponse<TReturnType> { Response = response };
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    HttpClientHandler.Dispose();
+                    HttpClient.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+        #endregion
     }
 }

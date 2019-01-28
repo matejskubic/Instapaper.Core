@@ -1,14 +1,13 @@
-﻿using AsyncOAuth;
-using Insta.Portable.Models;
+﻿using Instapaper.Core.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Insta.Portable
+namespace Instapaper.Core
 {
     public interface IInstapaperClient
     {
-        Task<AccessToken> GetAuthTokenAsync(string emailAddress, string password, CancellationToken cancellationToken = default(CancellationToken));
+        Task<OAuthToken> GetAuthTokenAsync(string emailAddress, string password, CancellationToken cancellationToken = default(CancellationToken));
         Task<InstaResponse<User>> VerifyUserAsync(CancellationToken cancellationToken = default(CancellationToken));
         Task<InstaResponse<BookmarksResponse>> GetBookmarksAsync(int? limit = null, string folderType = null, IEnumerable<int> alreadyHave = null, IEnumerable<int> highlights = null, CancellationToken cancellationToken = default(CancellationToken));
         Task<string> GetBookmarkContentAsync(int bookmarkId, CancellationToken cancellationToken = default(CancellationToken));
@@ -22,6 +21,6 @@ namespace Insta.Portable
         Task<InstaResponse<IEnumerable<Folder>>> GetFoldersAsync(CancellationToken cancellationToken = default(CancellationToken));
         Task<InstaResponse<Folder>> AddFolderAsync(string title, CancellationToken cancellationToken = default(CancellationToken));
         Task<bool> DeleteFolderAsync(string folderId, CancellationToken cancellationToken = default(CancellationToken));
-        AccessToken AccessToken { get; set; }
+        OAuthToken AccessToken { get; set; }
     }
 }

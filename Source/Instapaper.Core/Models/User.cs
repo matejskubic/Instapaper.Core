@@ -1,10 +1,8 @@
-﻿using Insta.Portable.Converters;
+﻿using Instapaper.Core.Converters;
 using Newtonsoft.Json;
-using PropertyChanged;
 
-namespace Insta.Portable.Models
+namespace Instapaper.Core.Models
 {
-    [ImplementPropertyChanged]
     public class User
     {
         [JsonProperty("username")]
@@ -18,5 +16,6 @@ namespace Insta.Portable.Models
         [JsonProperty("subscription_is_active")]
         [JsonConverter(typeof(BoolConverter))]
         public bool SubscriptionIsActive { get; set; }
+
     }
 }

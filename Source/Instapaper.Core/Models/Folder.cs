@@ -1,9 +1,7 @@
 ﻿using Newtonsoft.Json;
-using PropertyChanged;
 
-namespace Insta.Portable.Models
+namespace Instapaper.Core.Models
 {
-    [ImplementPropertyChanged]
     public class Folder
     {        
         [JsonProperty("folder_id")]

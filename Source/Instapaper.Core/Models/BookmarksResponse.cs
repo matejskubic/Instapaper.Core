@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace Insta.Portable.Models
+namespace Instapaper.Core.Models
 {
     public class BookmarksResponse
     {

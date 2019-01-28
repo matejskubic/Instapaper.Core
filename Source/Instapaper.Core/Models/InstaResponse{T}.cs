@@ -1,4 +1,4 @@
-﻿namespace Insta.Portable.Models
+﻿namespace Instapaper.Core.Models
 {
     public class InstaResponse<T> where T : class
     {
